@@ -2,17 +2,20 @@
   "name": "staff_tracker23",
   "version": "1.0.0",
   "description": "This week I was challenged to create a functioning command-line application from scratch to manage a company's staff database using: Node.js, Inquirer, and MySQL.",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "inquirer": "^9.2.12",
+    "console.table": "^0.10.0",
+    "dotenv": "^16.3.1",
+    "inquirer": "^8.2.4",
     "mysql": "^2.18.1",
+    "mysql2": "^3.6.3",
     "node": "^21.1.0"
   }
 }
