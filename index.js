@@ -1,16 +1,13 @@
 // Dependencies:
 const inquirer = require('inquirer');
-const dotenv = require('dotenv');
-const fs = require('fs');
+require('dotenv').config();
 
+// Imports:
 const { viewDepts, addDept } = require('./scripts/departments');
-const { viewRoles, addRole } = require('./scripts/roles');
+const { viewRoles, addRole, rolesFromDb } = require('./scripts/roles');
 const { viewEmployees, addEmployee, employeesFromDb } = require('./scripts/employees');
 
-const mysql = require('mysql2');
-dotenv.config();
-
-// inquirer prompt
+// Prompt:
 function userMenu() {
     inquirer
         .prompt([
@@ -31,7 +28,7 @@ function userMenu() {
             },
         ])
         .then((answers) => {
-            switch (answers.action) {
+            switch (answers.input) { 
                 case 'View All Departments':
                     viewDepts()
                         .then((departments) => {
@@ -44,93 +41,83 @@ function userMenu() {
                         });
                 break;
                 case 'Add New Department':
-                    addDept()
-                        .then((departments) => {
-                            const deptOptions = departments.map((department) => ({
-                                name: department.name,
-                                value: department.id,
-                        }));
-
-                        inquirer
-                            .prompt([
-                                {
-                                    type: 'input',
-                                    name: 'title',
-                                    message: 'Please enter title of role.'
-                                },
-                                {
-                                    type: 'input',
-                                    name: 'salary',
-                                    message: 'Please enter salary amount for role.'
-                                },
-                            ])
-                            .then((answers) => {
-                                addRole(answers.title, answers.salary, answers.departmentId)
-                                    .then(() => {
-                                        console.log('Role was added successfully.')
-                                        userMenu();
-                                    })
-                                    .catch((err) => {
-                                        console.error('Error:', err);
-                                        userMenu();
-                                    });
-                                });
+                    inquirer
+                        .prompt([
+                        {
+                            type: 'input',
+                            name: 'departmentName',
+                            message: 'Please enter the name of new department.',
+                        },
+                        ])
+                        .then((answers) => {
+                        addDept(answers.departmentName)
+                            .then(() => {
+                            console.log('Successfully added department.');
+                            userMenu();
                             })
                             .catch((err) => {
-                                console.error('Error:', err);
-                                userMenu();
+                            console.error('Error:', err);
+                            userMenu();
                             });
+                        });
                     break;
-
-                case 'View All Roles':
-                viewRoles()
-                    .then((roles) => {
-                        console.table(roles);
-                        userMenu();
-                    })
-                    .catch((err) => {
-                        console.error('Error:', err);
-                        userMenu();
-                    });
-                break;
-                case 'Add A Role':
-                    viewDepts()
-                        .then((departments) => {
-                            const deptOptions = departments.map((department) => ({
-                                name: department.name,
-                                value: department.id,
-                        }));
-
-                        inquirer
-                            .prompt([
-                                {
-                                    type: 'input',
-                                    name: 'title',
-                                    message: 'Please enter title of role.'
-                                },
-                                {
-                                    type: 'input',
-                                    name: 'salary',
-                                    message: 'Please enter salary amount for role.'
-                                },
-                            ])
-                            .then((answers) => {
-                                addRole(answers.title, answers.salary, answers.departmentId)
-                                    .then(() => {
-                                        console.log('Role was added successfully.')
+                    case 'View All Roles':
+                        viewRoles()
+                          .then((roles) => {
+                            console.table(roles);
+                            userMenu();
+                          })
+                          .catch((err) => {
+                            console.error('Error:', err);
+                            userMenu();
+                          });
+                        break;
+                        case 'Add New Role':
+                            viewDepts()
+                              .then((departments) => {
+                                const deptChoices = departments.map((department) => ({
+                                  name: department.department_name,
+                                  value: department.id,
+                                }));
+                          
+                                inquirer
+                                  .prompt([
+                                    {
+                                      type: 'input',
+                                      name: 'title',
+                                      message: 'Enter the title of the role:',
+                                    },
+                                    {
+                                      type: 'input',
+                                      name: 'salary',
+                                      message: 'Enter the salary for the role:',
+                                    },
+                                    {
+                                      type: 'list',
+                                      name: 'departmentId',
+                                      message: 'Choose the department for the role:',
+                                      choices: deptChoices,
+                                    },
+                                  ])
+                                  .then((answers) => {
+                                    addRole(answers.title, answers.salary, answers.departmentId)
+                                      .then(() => {
+                                        console.log('Role added successfully.');
                                         userMenu();
-                                    })
-                                    .catch((err) => {
+                                      })
+                                      .catch((err) => {
                                         console.error('Error:', err);
                                         userMenu();
-                                    });
-                                });
-                            })
-                            .catch((err) => {
-                                console.error('Error:', err);
+                                      });
+                                  });
+                              })
+                              .catch((err) => {
+                                console.error('Error fetching departments.', err);
                                 userMenu();
-                            });
-                    break;
+                              });
+                          break;
+
+
                     case 'View All Employees':
                         viewEmployees()
                             .then((employees) => {
@@ -174,7 +161,7 @@ function userMenu() {
                                 employeeDetails.manager_id
                             )
                             .then(() => {
-                                console.log('Employee was added successfully.')
+                                console.log('Employee added successfully.')
                                 userMenu();
                             })
                             .catch((err) => {
@@ -186,6 +173,7 @@ function userMenu() {
                     case 'Update Current Employee Role':
                         employeesFromDb()
                             .then((employees) => {
+                                rolesFromDb()
                                 inquirer
                                     .prompt([
                                         {
@@ -201,7 +189,7 @@ function userMenu() {
                                         {
                                             type: 'list',
                                             name: 'newRoleId',
-                                            message: 'Please choose new role for employee.',
+                                            message: 'Please choose insert new role for employee.',
                                             choices: roles.map((role) => ({
                                                 name: role.title,
                                                 value: role.id
@@ -210,7 +198,7 @@ function userMenu() {
                                         },
                                     ])
                                     .then((updateDetails) => {
-                                        updateEmployeeRole(updateDetails.employeeId, updateDetails.newRoleId)
+                                        updateRole(updateDetails.employeeId, updateDetails.newRoleId)
                                             .then(() => {
                                                 console.log('Employee\'s role updated successfully.');
                                                 userMenu();
@@ -222,16 +210,22 @@ function userMenu() {
                                     });
                             })
                             .catch((err) => {
-                                console.error('Error getting employees!', err);
+                                console.error('Error getting employees\' data.', err);
                                 userMenu();
                             });
                         break;
+
+
                         case 'Exit':
-                            console.log('Exiting application now.');
+                            console.log('Exiting application.');
                             process.exit(0);
                         break;
-                        }
+                    }
             })
+            .catch((err) => {
+                console.error('Error.', err);
+                userMenu();
+            });
 }
 
 userMenu();

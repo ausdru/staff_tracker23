@@ -1,8 +1,8 @@
-const connection = require('../config/connection');
+const db = require('../config/connection');
 
 function viewDepts() {
     return new Promise((resolve, reject) => {
-        connection.query('SELECT * FROM department', (err, departments) => {
+        db.query('SELECT * FROM department', (err, departments) => {
             if (err) {
                 reject(err);
             } else {
@@ -14,7 +14,7 @@ function viewDepts() {
 
 function addDept(departmentName) {
     return new Promise((resolve, reject) => {
-        connection.query('INSERT INTO department (name) VALUES (?)', [departmentName], (err, result) => {
+        db.query('INSERT INTO department (name) VALUES (?)', [departmentName], (err, result) => {
             if (err) {
                 reject(err);
             } else {
